@@ -1,0 +1,18 @@
+[
+  {
+    "id": "1",
+    "title": "Memahami Framer Motion di Tahun 2026",
+    "content": "<p>Framer Motion telah menjadi standar industri...</p><p>Isi artikel yang sangat panjang bisa Anda tulis di sini tanpa mengganggu data portfolio atau settings.</p>",
+    "category": "Tutorial",
+    "banner_url": "/assets/blog/framer-motion.jpg",
+    "created_at": "2026-01-28T10:00:00Z"
+  },
+  {
+    "id": "2",
+    "title": "Masa Depan Web Development",
+    "content": "Analisis mendalam mengenai tren teknologi web terbaru...",
+    "category": "Wawasan",
+    "banner_url": "/assets/blog/web-future.jpg",
+    "created_at": "2026-01-25T08:30:00Z"
+  }
+]

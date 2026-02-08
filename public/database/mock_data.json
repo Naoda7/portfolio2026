@@ -1,0 +1,51 @@
+{
+  "settings": {
+    "title": "Creative Digital Architect",
+    "description": "Building immersive digital experiences with modern technology and aesthetic soul.",
+    "logo_url": "/assets/logo.png",
+    "banner_url": "/assets/banner/portfolio-header.jpg",
+    "page_banner_url": "/assets/banner/blog-header.jpg",
+    "default_theme": "dark",
+    "socials": [
+      { "icon": "Github", "url": "https://github.com/yourusername" },
+      { "icon": "Instagram", "url": "https://instagram.com/yourusername" },
+      { "icon": "Linkedin", "url": "https://linkedin.com/in/yourusername" },
+      { "icon": "Twitter", "url": "https://twitter.com/yourusername" }
+    ]
+  },
+  "portfolios": [
+    {
+      "id": "p1",
+      "title": "Cosmic E-Commerce",
+      "description": "A futuristic shopping experience with 3D elements and seamless transitions. Built using React and Framer Motion.",
+      "category": "Web Design",
+      "tags": ["React", "Three.js", "Tailwind"],
+      "image_url": "/assets/projects/p1.jpg",
+      "project_url": "https://example.com"
+    },
+    {
+      "id": "p2",
+      "title": "Nebula Mobile App",
+      "description": "Financial tracking app with dark mode focus and biometric security integration.",
+      "category": "Mobile",
+      "tags": ["Flutter", "Firebase"],
+      "image_url": "/assets/projects/p2.jpg",
+      "project_url": "https://example.com"
+    },
+    {
+      "id": "p3",
+      "title": "Cyber Dashboard",
+      "description": "Real-time analytics dashboard for server monitoring and traffic management.",
+      "category": "UI/UX",
+      "tags": ["Figma", "Next.js"],
+      "image_url": "/assets/projects/p3.jpg",
+      "project_url": "https://example.com"
+    }
+  ],
+  "about": {
+    "full_name": "Nama Lengkap Anda",
+    "description": "Deskripsi bio Anda...",
+    "contact_email": "email@anda.com",
+    "photo_url": "/assets/about/profile.jpg"
+  }
+}
