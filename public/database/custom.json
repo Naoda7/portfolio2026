@@ -1,26 +1,26 @@
 {
   "hero": {
-    "title": "Digital Soul",
-    "description": "Crafting immersive digital experiences through clean code and artistic design. Specializing in high-performance web applications and interactive interfaces.",
-    "logo_url": "https://api.dicebear.com/7.x/bottts/svg?seed=soul",
+    "title": "Creative Designer & Illustrator",
+    "description": "Transforming ideas into digital reality with a touch of color and user-focused logic.",
+    "logo_url": "/assets/logo.png",
+    "default_theme": "dark",
     "socials": [
-      { "icon": "Github", "url": "https://github.com" },
-      { "icon": "Instagram", "url": "https://instagram.com" },
-      { "icon": "Linkedin", "url": "https://linkedin.com" },
-      { "icon": "Mail", "url": "mailto:hello@example.com" }
+      { "icon": "Github", "url": "https://github.com/Naoda7" },
+      { "icon": "Instagram", "url": "https://instagram.com/flotziel" },
+      { "icon": "Website", "url": "https://flotziel.pages.dev" }
     ]
   },
-  "blog": {
-    "title": "Digital Soul",
-    "page_banner_url": "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80",
-    "blog_banner_title": "THE JOURNAL",
-    "blog_banner_description": "A collection of thoughts on design, code, and the future of digital experiences."
-  },
   "portfolio": {
-    "title": "Digital Soul",
-    "banner_url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80",
-    "banner_title": "SELECTED WORKS",
-    "banner_description": "A showcase of creative development and digital craftsmanship."
+    "title": "Design",
+    "banner_url": "/assets/banner_portfolio.jpg",
+    "banner_title": "Design",
+    "banner_description": "A collection of my creative work and design case studies."
+  },
+  "blog": {
+    "title": "BLOG",
+    "page_banner_url": "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80",
+    "blog_banner_title": "BLOG",
+    "blog_banner_description": "Notes on design, process, and creative industry."
   }
 
 }

@@ -33,13 +33,11 @@ export default function BlogAdmin() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPageBannerModalOpen, setIsPageBannerModalOpen] = useState(false);
   
-  // Form State (Article)
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [bannerUrl, setBannerUrl] = useState('');
   
-  // Page Banner State
   const [pageBannerUrl, setPageBannerUrl] = useState('');
   const [pageBannerTitle, setPageBannerTitle] = useState('');
   const [pageBannerDescription, setPageBannerDescription] = useState('');
@@ -189,7 +187,6 @@ export default function BlogAdmin() {
 
   return (
     <div className="space-y-6 pb-24 md:pb-10 animate-in fade-in duration-500">
-      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Blog Management</h1>
@@ -215,7 +212,6 @@ export default function BlogAdmin() {
         </div>
       </div>
 
-      {/* Blog List */}
       <div className="grid gap-4">
         {blogs.length === 0 ? (
           <div className="text-center py-20 bg-muted/20 rounded-[2rem] border border-dashed border-border">
@@ -257,16 +253,9 @@ export default function BlogAdmin() {
         )}
       </div>
 
-      {/* Page Banner Modal */}
       {isPageBannerModalOpen && (
-        <div 
-          className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in"
-          onClick={() => setIsPageBannerModalOpen(false)}
-        >
-          <div 
-            className="w-full max-w-2xl relative"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-2xl relative">
             <AdminBannerEditor 
               sectionTitle="Blog Page Appearance"
               bannerUrl={pageBannerUrl}
@@ -299,16 +288,9 @@ export default function BlogAdmin() {
         </div>
       )}
 
-      {/* Article Editor Modal */}
       {isModalOpen && (
-        <div 
-          className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in"
-          onClick={() => setIsModalOpen(false)}
-        >
-          <div 
-            className="bg-card border border-border w-full max-w-4xl rounded-[2rem] shadow-2xl max-h-[95vh] md:max-h-[90vh] overflow-hidden flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-card border border-border w-full max-w-4xl rounded-[2rem] shadow-2xl max-h-[95vh] md:max-h-[90vh] overflow-hidden flex flex-col">
             <div className="p-5 md:p-6 border-b border-border flex justify-between items-center">
               <h2 className="text-xl font-bold">{currentId ? 'Edit Article' : 'New Article'}</h2>
               <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-muted rounded-full transition-colors"><X size={20} /></button>

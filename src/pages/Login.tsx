@@ -47,10 +47,10 @@ export default function Login() {
         <div className="bg-white dark:bg-card/40 backdrop-blur-2xl border border-black/5 dark:border-white/10 p-8 rounded-[35px] shadow-2xl">
           
           <div className="flex flex-col items-center mb-8">
-            <div className="w-16 h-16 bg-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/30 mb-4">
+            <div className="w-16 h-16 border border-item-desc rounded-2xl flex items-center justify-center mb-4">
               <ShieldCheck size={32} className="text-white" />
             </div>
-            <h1 className="text-xl font-bold tracking-tight uppercase italic">Login</h1>
+            <h1 className="text-xl font-bold tracking-tight uppercase ">Login</h1>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4 mb-5">

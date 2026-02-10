@@ -37,7 +37,7 @@ export default function ProjectCard({ item }: ProjectCardProps) {
         onClick={() => setIsModalOpen(true)}
         className="group bg-card border border-border rounded-[35px] overflow-hidden cursor-pointer shadow-[#bab3e636]  shadow-lg hover:shadow-2xl hover:shadow-[#bab3e636] transition-all h-full flex flex-col"
       >
-        <div className="aspect-[4/3] relative m-3 rounded-[25px] overflow-hidden bg-muted">
+        <div className="aspect-[4/3] relative m-3 rounded-[25px] rounded-b-none overflow-hidden bg-muted">
           <img 
             src={item.image_url} 
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
@@ -57,7 +57,7 @@ export default function ProjectCard({ item }: ProjectCardProps) {
           <h3 className="text-xl font-black italic uppercase text-item-title mt-1 leading-tight group-hover:text-primary transition-colors">
             {item.title}
           </h3>
-          <p className="text-item-desc text-xs line-clamp-2 mt-2 font-medium mb-4">
+          <p className="text-item-desc text-sm line-clamp-2 mt-2 font-medium mb-4">
             {item.description}
           </p>
           <div className="mt-auto flex flex-wrap gap-2">
@@ -89,14 +89,14 @@ export default function ProjectCard({ item }: ProjectCardProps) {
                 </button>
                 
                 <div className="md:w-3/5 bg-black/20 flex items-center justify-center p-4 cursor-zoom-in group" onClick={() => { setIsPreviewOpen(true); setIsModalOpen(false); }}>
-                  <img src={item.image_url} className="w-full h-full object-contain rounded-2xl shadow-inner group-hover:scale-[1.02] transition-transform duration-500" alt="Detail" />
+                  <img src={item.image_url} className="w-full h-auto object-contain rounded-2xl shadow-inner group-hover:scale-[1.02] transition-transform duration-500" alt="Detail" />
                 </div>
 
                 <div className="md:w-2/5 p-8 md:p-12 flex flex-col h-full bg-card">
                   <span className="text-primary font-black text-[10px] uppercase tracking-[0.2em]">{item.category}</span>
                   <h2 className="text-3xl font-black italic uppercase mt-2 mb-6 text-item-title leading-tight border-b border-border pb-4">{item.title}</h2>
                   <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar mb-6">
-                    <p className="text-item-desc text-sm leading-relaxed whitespace-pre-wrap font-medium">{item.description}</p>
+                    <p className="text-item-desc text-base leading-relaxed whitespace-pre-wrap font-medium">{item.description}</p>
                   </div>
                   {item.project_url && (
                     <a href={item.project_url} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-3 bg-primary text-primary-foreground py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:brightness-110 transition-all shadow-lg active:scale-95">

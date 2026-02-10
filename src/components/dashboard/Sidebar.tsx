@@ -89,7 +89,7 @@ export const Sidebar = ({ onClose }: SidebarProps) => {
       <div className="mt-auto pt-6 border-t border-border">
         <Button 
           variant="ghost" 
-          className="w-full justify-start gap-3 text-red-500 hover:bg-red-50 hover:text-red-600 rounded-2xl px-4"
+          className="w-full justify-start gap-3 text-primary hover:border-primary/50 border bg-card/50 border-border rounded-2xl px-4"
           onClick={handleLogout} 
         >
           <LogOut size={20} />

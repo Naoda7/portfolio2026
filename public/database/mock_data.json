@@ -13,39 +13,329 @@
       { "icon": "Twitter", "url": "https://twitter.com/yourusername" }
     ]
   },
+  "about": {
+    "full_name": "Rano Indradinata",
+    "description": "I am Rano Indradinata a Computer Science graduate currently pursuing a career in graphic design and UI/UX design. Over the years, I have developed various skills, including proficiency in Microsoft Office, video editing, IT support for hardware and software troubleshooting, and operating multiple operating systems. I am disciplined, honest, and responsible in my work, with the ability to perform effectively both individually and in a team. I have a strong passion for growth, high dedication, strong motivation, adaptability, and a keen interest in exploring new challenges. \n\n Skill: \n Adobe Family, Figma, Wordpress, Microsoft Office, Distro Linux, Core Draw, Capcut, Canva, Clup Studio Paint.",
+    "contact_email": "ranoindra@hotmail.com",
+    "photo_url": "/assets/logo.png",
+    "portfolio_url": "https://www.redbubble.com/people/seevon/"
+  },
+
   "portfolios": [
     {
-      "id": "p1",
-      "title": "Cosmic E-Commerce",
-      "description": "A futuristic shopping experience with 3D elements and seamless transitions. Built using React and Framer Motion.",
-      "category": "Web Design",
-      "tags": ["React", "Three.js", "Tailwind"],
-      "image_url": "/assets/projects/p1.jpg",
-      "project_url": "https://example.com"
+      "id": "a1",
+      "title": "Victory & Ulforce Greymon",
+      "description": "Illustrasi Victory & Ulforce Greymon",
+      "category": "Artwork",
+      "tags": ["Illustrasi"],
+      "image_url": "/assets/projects/artwork/Victory&UlforceGreymon.jpg",
+      "project_url": ""
     },
     {
-      "id": "p2",
-      "title": "Nebula Mobile App",
-      "description": "Financial tracking app with dark mode focus and biometric security integration.",
-      "category": "Mobile",
-      "tags": ["Flutter", "Firebase"],
-      "image_url": "/assets/projects/p2.jpg",
-      "project_url": "https://example.com"
+      "id": "a2",
+      "title": "Luban No.7",
+      "description": "Illustrasi dari hero honor of kings",
+      "category": "Artwork",
+      "tags": ["Illustrasi"],
+      "image_url": "/assets/projects/artwork/Luban.jpg",
+      "project_url": ""
     },
     {
-      "id": "p3",
-      "title": "Cyber Dashboard",
-      "description": "Real-time analytics dashboard for server monitoring and traffic management.",
+      "id": "a3",
+      "title": "Yami Sukehiro",
+      "description": "Illustrasi anime black clover yaitu Yami Sukehiro pemimpin dari guild black bull",
+      "category": "Artwork",
+      "tags": ["Illustrasi"],
+      "image_url": "/assets/projects/artwork/YamiSukehiro.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "a4",
+      "title": "Serval",
+      "description": "-",
+      "category": "Artwork",
+      "tags": ["Illustrasi"],
+      "image_url": "/assets/projects/artwork/Serval.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "a5",
+      "title": "Nelliel Tu Odelschwanck",
+      "description": "Illustrasi Nelliel Tu Odelschwanck lebih sering dipanggil sebagai Nel Tu (ネル・トゥ, Neru Tu). Adalah mantan Tres Espada (Espada Peringkat 3)",
+      "category": "Artwork",
+      "tags": ["Illustrasi"],
+      "image_url": "/assets/projects/artwork/Nelliel.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "a6",
+      "title": "Mayuri Kurotsuchi",
+      "description": "Mayuri Kurotsuchi bankai Ashisogi Jizō",
+      "category": "Artwork",
+      "tags": ["Illustrasi"],
+      "image_url": "/assets/projects/artwork/Mayuri.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "a7",
+      "title": "Ichigo Vasto Lord",
+      "description": "Illustrasi Perubahan ichigo sebagai hollow",
+      "category": "Artwork",
+      "tags": ["Illustrasi"],
+      "image_url": "/assets/projects/artwork/Ichigo.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "a8",
+      "title": "As Nodt",
+      "description": "seorang Quincy dan anggota Sternritter dalam Wandenreich dengan gelar F - (The Fear). ",
+      "category": "Artwork",
+      "tags": ["Illustrasi"],
+      "image_url": "/assets/projects/artwork/AsNodt.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "a9",
+      "title": "Shigekuni Yamamoto",
+      "description": "Illustrasi Yamamoto Genryūsai Shigekuni adalah mantan kapten Divisi 1 di Gotei 13 dan juga sebagai Kapten-Komandan dari seluruh Gotei 13 saat mengeluarkan Bankainya",
+      "category": "Artwork",
+      "tags": ["Illustrasi"],
+      "image_url": "/assets/projects/artwork/ShigekuniYamamoto.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "a10",
+      "title": "Terrucemon",
+      "description": "Terriermon & Lucemon",
+      "category": "Artwork",
+      "tags": ["Illustrasi"],
+      "image_url": "/assets/projects/artwork/Terrucemon.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "a11",
+      "title": "Terriermon",
+      "description": "Terriermon",
+      "category": "Artwork",
+      "tags": ["Illustrasi"],
+      "image_url": "/assets/projects/artwork/Terriermon.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "a12",
+      "title": "Gabumon Evolusi",
+      "description": "Illustrasi Evolusi dari gabumon",
+      "category": "Artwork",
+      "tags": ["Illustrasi"],
+      "image_url": "/assets/projects/artwork/gabumon.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "a13",
+      "title": "Gado-Gado Indonesia",
+      "description": "Illustrasi diambil dari indonesia yang sedang mewujudkan Ice Combatnya",
+      "category": "Artwork",
+      "tags": ["Illustrasi"],
+      "image_url": "/assets/projects/artwork/GGIndo.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "a14",
+      "title": "Ancient Jungle",
+      "description": "Illustrasi diambil dari sebuah map yang berada di game roblox",
+      "category": "Artwork",
+      "tags": ["Illustrasi"],
+      "image_url": "/assets/projects/artwork/AncientJungle.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "d1",
+      "title": "Octarine",
+      "description": "Desain social media",
+      "category": "Design",
+      "tags": ["Illustrasi"],
+      "image_url": "/assets/projects/designgraph/6.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "d2",
+      "title": "Bicara Uang",
+      "description": "Desain logo dan identitas merek",
+      "category": "Design",
+      "tags": ["Illustrasi"],
+      "image_url": "/assets/projects/designgraph/5.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "d3",
+      "title": "Voet",
+      "description": "Desain logo dan identitas merek",
+      "category": "Design",
+      "tags": ["Illustrasi"],
+      "image_url": "/assets/projects/designgraph/4.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "d4",
+      "title": "Shazwana",
+      "description": "Desain logo dan identitas merek",
+      "category": "Design",
+      "tags": ["Illustrasi"],
+      "image_url": "/assets/projects/designgraph/7.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "d5",
+      "title": "Visualizen",
+      "description": "Desain logo dan identitas merek",
+      "category": "Design",
+      "tags": ["Illustrasi"],
+      "image_url": "/assets/projects/designgraph/3.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "d6",
+      "title": "Gudpuzi (Gudang Pusat Zeni) 2",
+      "description": "Desain logo dan identitas merek",
+      "category": "Design",
+      "tags": ["Illustrasi"],
+      "image_url": "/assets/projects/designgraph/2.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "d7",
+      "title": "Gudpuzi (Gudang Pusat Zeni)",
+      "description": "Desain logo dan identitas merek",
+      "category": "Design",
+      "tags": ["Illustrasi"],
+      "image_url": "/assets/projects/designgraph/1.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "uxui1",
+      "title": "Login",
+      "description": "Login UI",
       "category": "UI/UX",
-      "tags": ["Figma", "Next.js"],
-      "image_url": "/assets/projects/p3.jpg",
-      "project_url": "https://example.com"
+      "tags": ["UI/UX"],
+      "image_url": "/assets/projects/uiux/13.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "uxui2",
+      "title": "Music UI Design",
+      "description": "Music UI",
+      "category": "UI/UX",
+      "tags": ["UI/UX"],
+      "image_url": "/assets/projects/uiux/10.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "uxui3",
+      "title": "Origin Launcher",
+      "description": "-",
+      "category": "UI/UX",
+      "tags": ["UI/UX"],
+      "image_url": "/assets/projects/uiux/9.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "uxui4",
+      "title": "Book Cart",
+      "description": "-",
+      "category": "UI/UX",
+      "tags": ["UI/UX"],
+      "image_url": "/assets/projects/uiux/11.png",
+      "project_url": ""
+    },
+    {
+      "id": "uxui5",
+      "title": "Login UI",
+      "description": "-",
+      "category": "UI/UX",
+      "tags": ["UI/UX"],
+      "image_url": "/assets/projects/uiux/12.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "uxui6",
+      "title": "WWG Website",
+      "description": "UI dan web developer dari WWG",
+      "category": "UI/UX",
+      "tags": ["UI/UX"],
+      "image_url": "/assets/projects/uiux/7.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "uxui7",
+      "title": "OZ Boosting",
+      "description": "UI dan web developer dari OZ Boosting",
+      "category": "UI/UX",
+      "tags": ["UI/UX"],
+      "image_url": "/assets/projects/uiux/6.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "uxui8",
+      "title": "KAITHO",
+      "description": "UI dan web developer dari OZ Boosting",
+      "category": "UI/UX",
+      "tags": ["UI/UX"],
+      "image_url": "/assets/projects/uiux/8.png",
+      "project_url": ""
+    },
+    {
+      "id": "uxui9",
+      "title": "Design System",
+      "description": "-",
+      "category": "UI/UX",
+      "tags": ["UI/UX"],
+      "image_url": "/assets/projects/uiux/4.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "uxui10",
+      "title": "Kita Membantu Sesama",
+      "description": "UI landing page",
+      "category": "UI/UX",
+      "tags": ["UI/UX"],
+      "image_url": "/assets/projects/uiux/5.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "uxui11",
+      "title": "Alpha Investment Group",
+      "description": "UI/UX Desainer",
+      "category": "UI/UX",
+      "tags": ["UI/UX"],
+      "image_url": "/assets/projects/uiux/3.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "uxui12",
+      "title": "Game Store",
+      "description": "UI/UI game store",
+      "category": "UI/UX",
+      "tags": ["UI/UX"],
+      "image_url": "/assets/projects/uiux/2.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "uxui13",
+      "title": "Redesign Pindad",
+      "description": "-",
+      "category": "UI/UX",
+      "tags": ["UI/UX"],
+      "image_url": "/assets/projects/uiux/1.jpg",
+      "project_url": ""
+    },
+    {
+      "id": "uxui14",
+      "title": "Redesign Terafulk",
+      "description": "-",
+      "category": "UI/UX",
+      "tags": ["UI/UX"],
+      "image_url": "/assets/projects/uiux/14.jpg",
+      "project_url": ""
     }
-  ],
-  "about": {
-    "full_name": "Nama Lengkap Anda",
-    "description": "Deskripsi bio Anda...",
-    "contact_email": "email@anda.com",
-    "photo_url": "/assets/about/profile.jpg"
-  }
+  ]
 }

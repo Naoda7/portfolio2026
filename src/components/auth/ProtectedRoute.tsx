@@ -8,11 +8,24 @@ export const ProtectedRoute = () => {
   const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      // Cek sesi aktif di Supabase
-      const { data: { session } } = await supabase.auth.getSession();
-      setAuthenticated(!!session);
+    const isJsonMode = import.meta.env.VITE_USE_JSON_MODE === 'true';
+
+    if (isJsonMode) {
+      setAuthenticated(false);
       setLoading(false);
+      return;
+    }
+
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setAuthenticated(!!session);
+      } catch (err) {
+        console.error("Auth check failed", err);
+        setAuthenticated(false);
+      } finally {
+        setLoading(false);
+      }
     };
 
     checkAuth();
@@ -36,7 +49,7 @@ export const ProtectedRoute = () => {
   }
 
   if (!authenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/gate-access" replace />;
   }
 
   return <Outlet />;

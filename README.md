@@ -230,3 +230,23 @@ SET blog_banner_title = 'The Journal',
     blog_banner_description = 'Thoughts, stories, and ideas about the digital world.'
 WHERE id = 1;
 ```
+13. Greeting text
+```
+ALTER TABLE landing_settings ADD COLUMN greeting TEXT DEFAULT 'Hello';
+UPDATE landing_settings SET greeting = 'Hello' WHERE id = 1;
+```
+14. Favicon
+```
+ALTER TABLE landing_settings 
+ADD COLUMN site_title TEXT DEFAULT 'Portfolio',
+ADD COLUMN favicon_url TEXT;
+```
+15. 
+```
+-- Menambahkan kolom portfolio_url ke tabel about_me
+ALTER TABLE about_me 
+ADD COLUMN IF NOT EXISTS portfolio_url TEXT;
+
+-- Memberikan komentar pada kolom untuk dokumentasi (opsional)
+COMMENT ON COLUMN about_me.portfolio_url IS 'URL untuk link portofolio eksternal';
+```

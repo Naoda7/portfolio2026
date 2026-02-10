@@ -5,7 +5,7 @@ import { Input } from '../../components/ui/Input';
 import { IconPicker } from '../../components/dashboard/IconPicker';
 import { useNotification } from '../../hooks/useNotification';
 import type { IconName } from '../../constants/icons';
-import { Plus, Trash2, Save, Loader2, Upload, Image as ImageIcon, X } from 'lucide-react';
+import { Plus, Trash2, Save, Loader2, Upload, Image as ImageIcon, X, Globe } from 'lucide-react';
 
 interface SocialLink {
   icon: IconName;
@@ -16,9 +16,14 @@ export default function LandingAdmin() {
   const { showNotification } = useNotification();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingFav, setUploadingFav] = useState(false);
+  
+  const [greeting, setGreeting] = useState('');
   const [title, setTitle] = useState('');
+  const [siteTitle, setSiteTitle] = useState('');
   const [description, setDescription] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
+  const [faviconUrl, setFaviconUrl] = useState('');
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [socials, setSocials] = useState<SocialLink[]>([]);
 
@@ -29,22 +34,27 @@ export default function LandingAdmin() {
   const fetchData = async () => {
     const { data, error } = await supabase.from('landing_settings').select('*').single();
     if (data && !error) {
+      setGreeting(data.greeting || 'Hello');
       setTitle(data.title || '');
+      setSiteTitle(data.site_title || '');
       setDescription(data.description || '');
       setLogoUrl(data.logo_url || '');
+      setFaviconUrl(data.favicon_url || '');
       setTheme(data.default_theme || 'dark');
       setSocials(data.socials || []);
     }
   };
 
-  const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>, type: 'logo' | 'favicon') => {
     try {
-      setUploading(true);
+      if (type === 'logo') setUploading(true);
+      else setUploadingFav(true);
+
       if (!e.target.files || e.target.files.length === 0) return;
       
       const file = e.target.files[0];
       const fileExt = file.name.split('.').pop();
-      const fileName = `logo-${Math.random()}.${fileExt}`;
+      const fileName = `${type}-${Math.random()}.${fileExt}`;
       const filePath = `${fileName}`;
 
       const { error: uploadError } = await supabase.storage
@@ -54,22 +64,32 @@ export default function LandingAdmin() {
       if (uploadError) throw uploadError;
 
       const { data } = supabase.storage.from('assets').getPublicUrl(filePath);
-      setLogoUrl(data.publicUrl);
-      showNotification("Logo uploaded successfully", "success");
+      
+      if (type === 'logo') {
+        setLogoUrl(data.publicUrl);
+      } else {
+        setFaviconUrl(data.publicUrl);
+      }
+
+      showNotification(`${type === 'logo' ? 'Logo' : 'Favicon'} uploaded successfully`, "success");
     } catch (error) {
       showNotification(error instanceof Error ? error.message : "Upload failed", "error");
     } finally {
-      setUploading(false);
+      if (type === 'logo') setUploading(false);
+      else setUploadingFav(false);
     }
   };
 
-  const handleDeleteImage = async () => {
-    if (!logoUrl) return;
-    if (!confirm('Remove logo from server?')) return;
+  const handleDeleteImage = async (type: 'logo' | 'favicon') => {
+    const targetUrl = type === 'logo' ? logoUrl : faviconUrl;
+    if (!targetUrl) return;
+    if (!confirm(`Remove ${type} from server?`)) return;
 
     try {
-      setUploading(true);
-      const urlParts = logoUrl.split('/');
+      if (type === 'logo') setUploading(true);
+      else setUploadingFav(true);
+
+      const urlParts = targetUrl.split('/');
       const fileName = urlParts[urlParts.length - 1];
 
       const { error: deleteError } = await supabase.storage
@@ -78,13 +98,20 @@ export default function LandingAdmin() {
 
       if (deleteError) throw deleteError;
 
-      setLogoUrl('');
-      await supabase.from('landing_settings').update({ logo_url: '' }).eq('id', 1);
-      showNotification("Logo removed", "info");
+      if (type === 'logo') {
+        setLogoUrl('');
+        await supabase.from('landing_settings').update({ logo_url: '' }).eq('id', 1);
+      } else {
+        setFaviconUrl('');
+        await supabase.from('landing_settings').update({ favicon_url: '' }).eq('id', 1);
+      }
+      
+      showNotification(`${type === 'logo' ? 'Logo' : 'Favicon'} removed`, "info");
     } catch (error) {
       showNotification(error instanceof Error ? error.message : "Failed to delete image", "error");
     } finally {
-      setUploading(false);
+      if (type === 'logo') setUploading(false);
+      else setUploadingFav(false);
     }
   };
 
@@ -93,15 +120,18 @@ export default function LandingAdmin() {
     try {
       const { error } = await supabase.from('landing_settings').upsert({
         id: 1,
+        greeting,
         title,
+        site_title: siteTitle,
         description,
         logo_url: logoUrl,
+        favicon_url: faviconUrl,
         default_theme: theme, 
         socials
       });
 
       if (error) throw error;
-      showNotification("Settings & Theme updated successfully!", "success");
+      showNotification("All settings updated successfully!", "success");
     } catch (error) {
       showNotification(error instanceof Error ? error.message : "Error saving settings", "error");
     } finally {
@@ -116,10 +146,9 @@ export default function LandingAdmin() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="order-1">
           <h1 className="text-2xl font-bold text-foreground">Landing Page Settings</h1>
-          <p className="text-sm text-muted-foreground">Manage your hero section and main branding.</p>
+          <p className="text-sm text-muted-foreground">Manage your hero section and browser identity.</p>
         </div>
         
-        {/* Save Button (Desktop) */}
         <Button 
           onClick={handleSave} 
           disabled={loading} 
@@ -130,14 +159,39 @@ export default function LandingAdmin() {
         </Button>
       </div>
 
-      {/* Main Grid Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 order-2">
         <div className="lg:col-span-2 space-y-6">
-          {/* General Settings */}
+          {/* General Branding */}
           <div className="bg-card border border-border p-5 md:p-6 rounded-3xl space-y-4 shadow-sm">
+            <div className="flex items-center gap-2 mb-2 text-primary">
+              <Globe size={18} />
+              <h2 className="text-sm font-bold uppercase tracking-wider">Site Identity</h2>
+            </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground/80">Main Title</label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Enter main title..." />
+              <label className="text-sm font-medium text-foreground/80">Site Title (Browser Tab)</label>
+              <Input 
+                value={siteTitle} 
+                onChange={(e) => setSiteTitle(e.target.value)} 
+                placeholder="e.g. John Doe | Portfolio" 
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground/80">Greeting Text</label>
+                <Input 
+                  value={greeting} 
+                  onChange={(e) => setGreeting(e.target.value)} 
+                  placeholder="e.g. Hello" 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground/80">Hero Title</label>
+                <Input 
+                  value={title} 
+                  onChange={(e) => setTitle(e.target.value)} 
+                  placeholder="Main title..." 
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground/80">Description</label>
@@ -202,15 +256,16 @@ export default function LandingAdmin() {
           </div>
         </div>
 
-        {/* Branding & Theme Sidebars */}
+        {/* Assets & Theme Sidebar */}
         <div className="space-y-6 lg:order-3">
+          {/* Logo Upload */}
           <div className="bg-card border border-border p-5 md:p-6 rounded-3xl text-center space-y-4 shadow-sm">
             <label className="text-sm font-medium block text-left text-foreground/80">Logo Branding</label>
             <div className="relative group mx-auto w-32 h-32 bg-muted/50 rounded-2xl border-2 border-dashed border-border flex items-center justify-center overflow-hidden transition-all hover:border-primary/50">
               {logoUrl ? (
                 <>
                   <img src={logoUrl} alt="Logo" className="w-full h-full object-contain p-2" />
-                  <button onClick={handleDeleteImage} className="absolute inset-0 bg-background/60 flex items-center justify-center opacity-0 group-hover:opacity-100 text-red-500 transition-opacity">
+                  <button onClick={() => handleDeleteImage('logo')} className="absolute inset-0 bg-background/60 flex items-center justify-center opacity-0 group-hover:opacity-100 text-red-500 transition-opacity">
                     <X size={28} strokeWidth={3} />
                   </button>
                 </>
@@ -220,13 +275,38 @@ export default function LandingAdmin() {
               {uploading && <div className="absolute inset-0 bg-background/60 flex items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>}
             </div>
             <label className="block">
-              <input type="file" className="hidden" onChange={handleFileUpload} accept="image/*" disabled={uploading} />
+              <input type="file" className="hidden" onChange={(e) => handleFileUpload(e, 'logo')} accept="image/*" disabled={uploading} />
               <div className="cursor-pointer inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-xl text-sm font-medium w-full justify-center border border-primary/20 hover:bg-primary/20 transition-all">
                 <Upload size={16} /> {logoUrl ? 'Change Logo' : 'Upload Logo'}
               </div>
             </label>
           </div>
 
+          {/* Favicon Upload */}
+          <div className="bg-card border border-border p-5 md:p-6 rounded-3xl text-center space-y-4 shadow-sm">
+            <label className="text-sm font-medium block text-left text-foreground/80">Favicon (Browser Icon)</label>
+            <div className="relative group mx-auto w-16 h-16 bg-muted/50 rounded-xl border-2 border-dashed border-border flex items-center justify-center overflow-hidden transition-all hover:border-primary/50">
+              {faviconUrl ? (
+                <>
+                  <img src={faviconUrl} alt="Favicon" className="w-full h-full object-contain p-1" />
+                  <button onClick={() => handleDeleteImage('favicon')} className="absolute inset-0 bg-background/60 flex items-center justify-center opacity-0 group-hover:opacity-100 text-red-500 transition-opacity">
+                    <X size={20} strokeWidth={3} />
+                  </button>
+                </>
+              ) : (
+                <ImageIcon className="text-muted-foreground/30" size={24} />
+              )}
+              {uploadingFav && <div className="absolute inset-0 bg-background/60 flex items-center justify-center"><Loader2 className="animate-spin text-primary" size={16} /></div>}
+            </div>
+            <label className="block">
+              <input type="file" className="hidden" onChange={(e) => handleFileUpload(e, 'favicon')} accept="image/*" disabled={uploadingFav} />
+              <div className="cursor-pointer inline-flex items-center gap-2 bg-muted text-muted-foreground px-4 py-2 rounded-xl text-xs font-medium w-full justify-center border border-border hover:bg-muted/80 transition-all">
+                <Upload size={14} /> {faviconUrl ? 'Change Favicon' : 'Upload Favicon'}
+              </div>
+            </label>
+          </div>
+
+          {/* Theme Selector */}
           <div className="bg-card border border-border p-5 md:p-6 rounded-3xl space-y-4 shadow-sm">
             <label className="text-sm font-medium text-foreground/80">Default Mode</label>
             <div className="flex p-1 bg-muted rounded-2xl border border-border/50">

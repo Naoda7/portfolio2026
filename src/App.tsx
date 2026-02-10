@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { supabase } from './lib/supabase';
 
 import { NotificationProvider } from './context/NotificationProvider';
+import { useBranding } from './hooks/useBranding';
 
 import Navbar from './components/Navbar';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
@@ -38,8 +39,22 @@ const PublicLayout = ({ children }: { children: ReactNode }) => (
 export default function App() {
   const [isThemeLoading, setIsThemeLoading] = useState(true);
 
+  // Custom hook untuk favicon dan title (sudah menangani JSON mode secara internal)
+  useBranding();
+
   useEffect(() => {
     const syncGlobalTheme = async () => {
+      const isJsonMode = import.meta.env.VITE_USE_JSON_MODE === 'true';
+      const localTheme = localStorage.getItem('theme') || 'light';
+
+      // JIKA MODE JSON AKTIF: Lewati panggilan Supabase
+      if (isJsonMode) {
+        document.documentElement.classList.toggle('dark', localTheme === 'dark');
+        setIsThemeLoading(false);
+        return;
+      }
+
+      // JIKA MODE DATABASE AKTIF: Hubungi Supabase
       try {
         const { data, error } = await supabase
           .from('landing_settings')
@@ -47,7 +62,6 @@ export default function App() {
           .single();
 
         const dbTheme = data?.default_theme;
-        const localTheme = localStorage.getItem('theme');
         const lastSyncedDbTheme = localStorage.getItem('last_db_theme');
 
         if (!error && dbTheme) {
@@ -55,13 +69,16 @@ export default function App() {
             document.documentElement.classList.toggle('dark', dbTheme === 'dark');
             localStorage.setItem('theme', dbTheme);
             localStorage.setItem('last_db_theme', dbTheme);
-          } 
-          else if (localTheme) {
+          } else {
             document.documentElement.classList.toggle('dark', localTheme === 'dark');
           }
+        } else {
+          // Fallback jika error database
+          document.documentElement.classList.toggle('dark', localTheme === 'dark');
         }
       } catch (err) {
-        console.error("Theme Engine Error:", err);
+        console.warn("Database theme sync failed, using local theme", err);
+        document.documentElement.classList.toggle('dark', localTheme === 'dark');
       } finally {
         setIsThemeLoading(false);
       }
@@ -71,7 +88,7 @@ export default function App() {
   }, []);
 
   if (isThemeLoading) {
-    return <div className="min-h-screen bg-background transition-colors duration-500" />;
+    return <div className="min-h-screen bg-background" />;
   }
 
   return (
@@ -79,25 +96,18 @@ export default function App() {
       <BrowserRouter>
         <ScrollToTop />
         <Routes>
-          {/* --- PUBLIC SECTION --- */}
           <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
           <Route path="/portfolio" element={<PublicLayout><Portfolio /></PublicLayout>} />
           <Route path="/blog" element={<PublicLayout><BlogPage /></PublicLayout>} />
           <Route path="/blog/:id" element={<PublicLayout><BlogDetail /></PublicLayout>} />
           <Route path="/about" element={<PublicLayout><AboutMe /></PublicLayout>} />
           
-          {/* --- AUTH SECTION --- */}
           <Route path="/gate-access" element={<Login />} />
-          
-          {/* redirect for legacy login URL */}
           <Route path="/login" element={<Navigate to="/gate-access" replace />} />
 
-          {/* --- PRIVATE SECTION (ADMIN) --- */}
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<DashboardLayout />}>
-              {/* Redirect */}
               <Route index element={<Navigate to="/dashboard/landing" replace />} />
-              
               <Route path="landing" element={<LandingAdmin />} />
               <Route path="portfolio" element={<PortfolioAdmin />} />
               <Route path="blog" element={<BlogAdmin />} />
@@ -105,7 +115,6 @@ export default function App() {
             </Route>
           </Route>
 
-          {/* --- FALLBACK SECTION --- */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

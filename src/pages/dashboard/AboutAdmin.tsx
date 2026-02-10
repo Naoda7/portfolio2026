@@ -2,15 +2,18 @@ import { useState, useEffect, type ChangeEvent } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { Loader2, Save, Upload, User, Mail, X } from 'lucide-react';
+import { useNotification } from '../../hooks/useNotification';
+import { Loader2, Save, Upload, User, Mail, X, Globe } from 'lucide-react';
 
 export default function AboutAdmin() {
+  const { showNotification } = useNotification();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [fullName, setFullName] = useState('');
   const [description, setDescription] = useState('');
   const [email, setEmail] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
+  const [portfolioUrl, setPortfolioUrl] = useState('');
 
   useEffect(() => {
     fetchAbout();
@@ -23,6 +26,7 @@ export default function AboutAdmin() {
       setDescription(data.description || '');
       setEmail(data.contact_email || '');
       setPhotoUrl(data.photo_url || '');
+      setPortfolioUrl(data.portfolio_url || '');
     }
   };
 
@@ -40,8 +44,9 @@ export default function AboutAdmin() {
 
       const { data } = supabase.storage.from('assets').getPublicUrl(filePath);
       setPhotoUrl(data.publicUrl);
+      showNotification("Profile photo uploaded", "success");
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Upload failed');
+      showNotification(error instanceof Error ? error.message : 'Upload failed', "error");
     } finally {
       setUploading(false);
     }
@@ -61,10 +66,9 @@ export default function AboutAdmin() {
 
       setPhotoUrl('');
       await supabase.from('about_me').update({ photo_url: '' }).eq('id', 1);
-      
-    } catch (error) {
-      console.error("Delete failed:", error);
-      alert("Failed to remove photo");
+      showNotification("Photo removed", "info");
+    } catch {
+      showNotification("Failed to remove photo", "error");
     } finally {
       setUploading(false);
     }
@@ -78,14 +82,14 @@ export default function AboutAdmin() {
         full_name: fullName,
         description,
         contact_email: email,
-        photo_url: photoUrl
+        photo_url: photoUrl,
+        portfolio_url: portfolioUrl
       });
 
       if (error) throw error;
-      alert('Profile updated successfully!');
+      showNotification("Profile updated successfully!", "success");
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to update profile';
-      alert(message);
+      showNotification(error instanceof Error ? error.message : 'Failed to update profile', "error");
     } finally {
       setLoading(false);
     }
@@ -93,16 +97,12 @@ export default function AboutAdmin() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 pb-24 md:pb-10 animate-in fade-in duration-500">
-      {/* Header */}
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold text-foreground">About Me</h1>
         <p className="text-sm text-muted-foreground">Personal information that appears on your bio page.</p>
       </div>
 
-      {/* Main Form Card */}
       <div className="bg-card border border-border rounded-[2rem] p-6 md:p-10 shadow-sm space-y-8">
-        
-        {/* Profile Photo Section */}
         <div className="flex flex-col items-center gap-4">
           <div className="relative group h-36 w-36 rounded-full border-4 border-dashed border-muted-foreground/20 overflow-hidden bg-muted flex items-center justify-center transition-all hover:border-primary/50">
             {photoUrl ? (
@@ -142,7 +142,6 @@ export default function AboutAdmin() {
           </label>
         </div>
 
-        {/* Input Fields */}
         <div className="grid gap-6">
           <div className="space-y-2">
             <label className="text-sm font-semibold ml-1">Full Name</label>
@@ -154,16 +153,31 @@ export default function AboutAdmin() {
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-semibold ml-1">Contact Email</label>
-            <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-              <Input 
-                className="pl-12 rounded-xl h-12" 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
-                placeholder="email@example.com" 
-              />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold ml-1">Contact Email</label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                <Input 
+                  className="pl-12 rounded-xl h-12" 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)} 
+                  placeholder="email@example.com" 
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold ml-1">Portfolio Link (URL)</label>
+              <div className="relative">
+                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                <Input 
+                  className="pl-12 rounded-xl h-12" 
+                  value={portfolioUrl} 
+                  onChange={(e) => setPortfolioUrl(e.target.value)} 
+                  placeholder="https://yourportfolio.com" 
+                />
+              </div>
             </div>
           </div>
 
@@ -178,7 +192,6 @@ export default function AboutAdmin() {
           </div>
         </div>
 
-        {/* Action Button */}
         <Button 
           onClick={handleSave} 
           disabled={loading || uploading} 

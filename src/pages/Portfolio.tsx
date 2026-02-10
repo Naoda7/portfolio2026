@@ -8,6 +8,7 @@ import type { Portfolio } from '../types/portfolio';
 
 export default function PortfolioPage() {
   const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
+  const [randomAllItems, setRandomAllItems] = useState<Portfolio[]>([]);
   const [categories, setCategories] = useState<string[]>(['All']);
   const [activeTab, setActiveTab] = useState('All');
   const [isLoading, setIsLoading] = useState(true);
@@ -20,40 +21,64 @@ export default function PortfolioPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
+  // Fungsi Helper untuk mengacak array (Shuffle)
+  const shuffleArray = (array: Portfolio[]) => {
+    return [...array].sort(() => Math.random() - 0.5);
+  };
+
   const fetchData = useCallback(async () => {
     const useJsonMode = import.meta.env.VITE_USE_JSON_MODE === 'true';
+    
+    // Logika Fetch Local (JSON Fallback)
+    const fetchFromLocal = async () => {
+      const customRes = await fetch('/database/custom.json');
+      if (customRes.ok) {
+        const customData = await customRes.json();
+        const pfSettings = customData.portfolio;
+        setBannerUrl(pfSettings?.banner_url || null);
+        setBannerTitle(pfSettings?.banner_title || "Selected Works");
+        setBannerDescription(pfSettings?.banner_description || "Exploring creative boundaries.");
+        setSiteTitle(pfSettings?.title || "Digital Soul");
+      }
+
+      const response = await fetch('/database/mock_data.json');
+      if (response.ok) {
+        const jsonData = await response.json();
+        const rawData = jsonData.portfolios || [];
+        const sortedData = rawData.sort((a: Portfolio, b: Portfolio) => 
+          b.id.localeCompare(a.id, undefined, { numeric: true, sensitivity: 'base' })
+        );
+        return sortedData;
+      }
+      return [];
+    };
+
     try {
       setIsLoading(true);
       let portfolioData: Portfolio[] = [];
 
       if (useJsonMode) {
-        const customRes = await fetch('/database/custom.json');
-        if (customRes.ok) {
-          const customData = await customRes.json();
-          const pfSettings = customData.portfolio;
-          setBannerUrl(pfSettings?.banner_url || null);
-          setBannerTitle(pfSettings?.banner_title || "Selected Works");
-          setBannerDescription(pfSettings?.banner_description || "Exploring creative boundaries.");
-          setSiteTitle(pfSettings?.title || "Digital Soul");
-        }
-
-        const response = await fetch('/database/mock_data.json');
-        const jsonData = await response.json();
-        portfolioData = jsonData.portfolios || [];
+        portfolioData = await fetchFromLocal();
       } else {
-        const { data: settings } = await supabase.from('landing_settings').select('banner_url, title, banner_title, banner_description').single();
-        setBannerUrl(settings?.banner_url || null);
-        setSiteTitle(settings?.title || "Digital Soul");
-        setBannerTitle(settings?.banner_title || "Selected Works");
-        setBannerDescription(settings?.banner_description || "Exploring creative boundaries.");
-        
-        const { data, error } = await supabase.from('portfolios').select('*').order('created_at', { ascending: false });
-        if (error) throw error;
-        portfolioData = data as Portfolio[];
+        try {
+          const { data: settings } = await supabase.from('landing_settings').select('banner_url, title, banner_title, banner_description').single();
+          setBannerUrl(settings?.banner_url || null);
+          setSiteTitle(settings?.title || "Digital Soul");
+          setBannerTitle(settings?.banner_title || "Selected Works");
+          setBannerDescription(settings?.banner_description || "Exploring creative boundaries.");
+          
+          const { data, error } = await supabase.from('portfolios').select('*').order('created_at', { ascending: false });
+          if (error) throw error;
+          portfolioData = data as Portfolio[];
+        } catch {
+          console.log("%c switching", "color: #fbbf24; font-weight: bold;");
+          portfolioData = await fetchFromLocal();
+        }
       }
 
       if (portfolioData) {
         setPortfolios(portfolioData);
+        setRandomAllItems(shuffleArray(portfolioData));
         setCategories(['All', ...Array.from(new Set(portfolioData.map((item) => item.category)))]);
       }
     } catch (err) {
@@ -67,10 +92,22 @@ export default function PortfolioPage() {
     fetchData(); 
   }, [fetchData]);
 
-  const filteredData = useMemo(() => 
-    activeTab === 'All' ? portfolios : portfolios.filter(i => i.category === activeTab), 
-    [activeTab, portfolios]
-  );
+  // Efek Interval Shuffle: Mengacak tab "All" setiap 10 detik
+  useEffect(() => {
+    if (portfolios.length > 0 && activeTab === 'All') {
+      const interval = setInterval(() => {
+        setRandomAllItems(shuffleArray(portfolios));
+      }, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [portfolios, activeTab]);
+
+  const filteredData = useMemo(() => {
+    if (activeTab === 'All') {
+      return randomAllItems;
+    }
+    return portfolios.filter(i => i.category === activeTab);
+  }, [activeTab, portfolios, randomAllItems]);
   
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   
@@ -134,16 +171,25 @@ export default function PortfolioPage() {
       </div>
 
       {/* --- PORTFOLIO GRID --- */}
-      <section className="max-w-7xl mx-auto px-4 mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        <AnimatePresence mode="popLayout">
+      <div className="max-w-7xl mx-auto px-4 mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 min-h-[600px]">
+        <AnimatePresence mode="popLayout" initial={false}>
           {currentData.map((item) => (
-            <ProjectCard 
-              key={item.id} 
-              item={item} 
-            />
+            <motion.div
+              key={`${activeTab}-${item.id}`}
+              layout
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ 
+                duration: 0.4, 
+                ease: [0.4, 0, 0.2, 1] 
+              }}
+            >
+              <ProjectCard item={item} />
+            </motion.div>
           ))}
         </AnimatePresence>
-      </section>
+      </div>
 
       {/* --- PAGINATION --- */}
       {totalPages > 1 && (

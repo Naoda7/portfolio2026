@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Footer from '../components/Footer';
 import ProjectCard from '../components/ProjectCard';
 import type { Portfolio } from '../types/portfolio';
-
 import { 
   HelpCircle, 
   Loader2, 
@@ -18,6 +17,7 @@ interface SocialConnection {
 }
 
 interface HeroSettings {
+  greeting: string;
   title: string;
   description: string;
   logo_url: string;
@@ -27,38 +27,70 @@ interface HeroSettings {
 export default function Home() {
   const [hero, setHero] = useState<HeroSettings | null>(null);
   const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
+  const [randomAllItems, setRandomAllItems] = useState<Portfolio[]>([]);
   const [activeTab, setActiveTab] = useState('All');
   const [isLoading, setIsLoading] = useState(true);
 
+  // Helper untuk mengacak data (Shuffle)
+  const shuffleArray = (array: Portfolio[]) => {
+    return [...array].sort(() => Math.random() - 0.5);
+  };
+
   const fetchData = useCallback(async () => {
-    const useJsonMode = import.meta.env.VITE_USE_JSON_MODE === 'true';
+    const mode = String(import.meta.env.VITE_USE_JSON_MODE || 'auto').toLowerCase();
+    
+    const fetchFromLocal = async () => {
+      const heroRes = await fetch('/database/custom.json');
+      if (heroRes.ok) {
+        const heroData = await heroRes.json();
+        setHero(heroData.hero);
+      }
+
+      const portfolioRes = await fetch('/database/mock_data.json');
+      if (portfolioRes.ok) {
+        const portData = await portfolioRes.json();
+        const rawData = portData.portfolios || [];
+        const sortedData = rawData.sort((a: Portfolio, b: Portfolio) => 
+          b.id.localeCompare(a.id, undefined, { numeric: true, sensitivity: 'base' })
+        );
+        setPortfolios(sortedData);
+        setRandomAllItems(shuffleArray(sortedData).slice(0, 6));
+      }
+    };
+
     try {
       setIsLoading(true);
-      if (useJsonMode) {
-        const heroRes = await fetch('/database/custom.json');
-        if (heroRes.ok) {
-          const heroData = await heroRes.json();
-          setHero(heroData.hero);
-        }
 
-        const portfolioRes = await fetch('/database/mock_data.json');
-        if (portfolioRes.ok) {
-          const portData = await portfolioRes.json();
-          setPortfolios(portData.portfolios || []);
-        }
-      } else {
-        const { data: sData } = await supabase.from('landing_settings').select('*').single();
-        const { data: pData } = await supabase.from('portfolios').select('*').order('created_at', { ascending: false });
+      if (mode === 'true') {
+        await fetchFromLocal();
+        return;
+      }
+
+      try {
+        const { data: sData, error: sError } = await supabase.from('landing_settings').select('*').single();
+        const { data: pData, error: pError } = await supabase.from('portfolios').select('*').order('created_at', { ascending: false });
         
+        if (sError || pError) throw new Error("Database Error");
+
         if (sData) {
           setHero({
+            greeting: sData.greeting,
             title: sData.title,
             description: sData.description,
             logo_url: sData.logo_url,
             socials: sData.socials
           });
         }
-        if (pData) setPortfolios(pData as Portfolio[]);
+        if (pData) {
+          const data = pData as Portfolio[];
+          setPortfolios(data);
+          setRandomAllItems(shuffleArray(data).slice(0, 6));
+        }
+      } catch {
+        if (mode === 'auto' || mode === 'false') {
+          console.log("%c switching", "color: #fbbf24; font-weight: bold;");
+          await fetchFromLocal();
+        }
       }
     } catch (err) {
       console.error("Fetch Error:", err);
@@ -71,12 +103,21 @@ export default function Home() {
     fetchData(); 
   }, [fetchData]);
 
+  useEffect(() => {
+    if (portfolios.length > 0 && activeTab === 'All') {
+      const interval = setInterval(() => {
+        setRandomAllItems(shuffleArray(portfolios).slice(0, 6));
+      }, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [portfolios, activeTab]);
+
   const categories = useMemo(() => ['All', ...Array.from(new Set(portfolios.map(p => p.category)))], [portfolios]);
   
-  const filteredPortfolios = useMemo(() => (activeTab === 'All' 
-    ? portfolios 
-    : portfolios.filter(p => p.category === activeTab)
-  ).slice(0, 6), [activeTab, portfolios]);
+  const filteredPortfolios = useMemo(() => {
+    if (activeTab === 'All') return randomAllItems; 
+    return portfolios.filter(p => p.category === activeTab).slice(0, 6);
+  }, [activeTab, portfolios, randomAllItems]);
 
   if (isLoading) {
     return (
@@ -91,7 +132,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-500 overflow-x-hidden font-sans">
-      {/* --- BACKGROUND LIGHTS --- */}
       <div className="fixed inset-0 overflow-hidden -z-10">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-600/10 rounded-full blur-[120px]" />
         <div className="absolute bottom-[10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 rounded-full blur-[120px]" />
@@ -100,7 +140,6 @@ export default function Home() {
       {/* --- HERO SECTION --- */}
       <header className="relative px-4 pt-28 md:pt-36 max-w-7xl mx-auto w-full">
         <div className="relative backdrop-blur-2xl p-6 sm:p-10 md:p-16 rounded-[40px] border border-white/10 shadow-md overflow-hidden transition-all duration-500">
-          
           <div className="absolute -top-20 -left-20 w-64 h-64 bg-purple-500/30 rounded-full blur-[80px] -z-10 animate-pulse" />
           <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-blue-500/10 rounded-full blur-[100px] -z-10" />
           
@@ -117,16 +156,19 @@ export default function Home() {
             )}
 
             <div className="text-center md:text-left">
-              <h1 className="text-3xl md:text-[5rem] font-black mb-4 tracking-tighter italic uppercase leading-[0.9]">
+              <h1 className="text-[0.75rem] md:text-[1.25rem] font-bold mb-1 opacity-60 italic uppercase">
+                <span className="bg-gradient-to-r from-purple-500 via-fuchsia-500 to-blue-400 bg-clip-text text-transparent inline-block w-fit">
+                  {hero?.greeting || "Hello"}
+                </span>
+              </h1>
+              <h1 className="text-3xl md:text-[5rem] font-black mb-4 tracking-tighter italic uppercase leading-[0.8]">
                 <span className="bg-gradient-to-r from-purple-500 via-fuchsia-500 to-blue-500 bg-clip-text text-transparent inline-block w-fit">
                   {hero?.title || "Digital Soul"}
                 </span>
               </h1>
-              
-              <p className="text-accent-custom text-base md:text-xl max-w-xl mb-8 leading-relaxed font-medium">
+              <p className="text-item-desc text-base md:text-xl max-w-xl mb-8 leading-relaxed font-medium">
                 {hero?.description}
               </p>
-
               <div className="flex flex-wrap gap-3 justify-center md:justify-start">
                 {hero?.socials?.map((social, idx) => {
                   const IconComponent = ICON_MAP[social.icon as keyof typeof ICON_MAP] || HelpCircle;
@@ -149,18 +191,14 @@ export default function Home() {
         </div>
       </header>
 
-      {/* --- PORTFOLIO PREVIEW SECTION --- */}
+      {/* --- PORTFOLIO SECTION --- */}
       <section className="px-4 py-12 md:py-20 max-w-7xl mx-auto w-full">
         <div className="bg-card/30 backdrop-blur-md p-6 md:p-12 rounded-[40px] border border-border shadow-md">
           <div className="flex flex-col md:flex-row justify-between items-center mb-16 gap-10">
             <div className="text-center md:text-left relative">
-              
-              {/* --- DARKMODE GRADIENT BLUR CIRCLE --- */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[150%] 
                 bg-gradient-to-br from-purple-500/20 via-blue-500/10 to-transparent 
-                dark:from-purple-600/30 dark:via-blue-600/20 
-                blur-[50px] md:blur-[80px] rounded-full -z-10 opacity-70" />
-              
+                dark:from-purple-600/30 dark:via-blue-600/20 blur-[50px] md:blur-[80px] rounded-full -z-10 opacity-70" />
               <h2 className="text-3xl md:text-6xl font-black italic uppercase tracking-tighter bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent relative z-10">
                 Selected Works
               </h2>
@@ -170,7 +208,7 @@ export default function Home() {
               {categories.map(cat => (
                 <button 
                   key={cat} 
-                  onClick={() => setActiveTab(cat)} 
+                  onClick={() => { setActiveTab(cat); }} 
                   className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border ${
                     activeTab === cat 
                     ? "bg-primary text-primary-foreground border-primary shadow-lg" 
@@ -183,16 +221,22 @@ export default function Home() {
             </div>
           </div>
 
-          <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <AnimatePresence mode="popLayout">
+          {/* --- GRID CONTAINER --- */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 min-h-[550px] items-start">
+            <AnimatePresence mode="popLayout" initial={false}>
               {filteredPortfolios.map((item) => (
-                <ProjectCard 
-                  key={item.id} 
-                  item={item} 
-                />
+                <motion.div
+                  key={`${activeTab}-${item.id}`} 
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                >
+                  <ProjectCard item={item} />
+                </motion.div>
               ))}
             </AnimatePresence>
-          </motion.div>
+          </div>
 
           <div className="mt-16 text-center">
             <a href="/portfolio" className="group inline-flex items-center gap-3 px-12 py-5 border-2 border-primary rounded-full hover:bg-primary text-primary hover:text-white transition-all font-black text-xs tracking-[0.2em] uppercase active:scale-95">

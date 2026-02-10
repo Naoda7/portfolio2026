@@ -18,82 +18,105 @@ export default function BlogPage() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
-  const [bannerTitle, setBannerTitle] = useState<string>("");
-  const [bannerDescription, setBannerDescription] = useState<string>("");
-  const [siteTitle, setSiteTitle] = useState<string>(""); 
+  const [bannerTitle, setBannerTitle] = useState<string>("My Thoughts");
+  const [bannerDescription, setBannerDescription] = useState<string>("Sharing stories and insights.");
+  const [siteTitle, setSiteTitle] = useState<string>("Digital Soul"); 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 6;
 
-  const fetchBlogs = useCallback(async () => {
-    const useJsonMode = import.meta.env.VITE_USE_JSON_MODE === 'true';
+  const hasSupabaseConfig = Boolean(
+    import.meta.env.VITE_SUPABASE_URL && 
+    import.meta.env.VITE_SUPABASE_ANON_KEY &&
+    import.meta.env.VITE_SUPABASE_URL !== 'YOUR_SUPABASE_URL'
+  );
 
+  const fetchFromLocal = useCallback(async () => {
     try {
-      setIsLoading(true);
+      const customRes = await fetch('/database/custom.json');
+      if (customRes.ok) {
+        const customData = await customRes.json();
+        const blogBanner = customData.blog;
+        setBannerUrl(blogBanner?.page_banner_url || null);
+        setBannerTitle(blogBanner?.blog_banner_title || "My Thoughts");
+        setBannerDescription(blogBanner?.blog_banner_description || "Sharing stories and insights.");
+        setSiteTitle(blogBanner?.title || "Digital Soul");
+      }
 
-      if (useJsonMode) {
-        const customRes = await fetch('/database/custom.json');
-        if (customRes.ok) {
-          const customData = await customRes.json();
-          const blogBanner = customData.blog;
-          
-          setBannerUrl(blogBanner?.page_banner_url || null);
-          setBannerTitle(blogBanner?.blog_banner_title || "My Thoughts");
-          setBannerDescription(blogBanner?.blog_banner_description || "Sharing stories and insights.");
-          setSiteTitle(blogBanner?.title || "Digital Soul");
-        }
-
-        const blogRes = await fetch('/database/blog_data.json');
-        if (!blogRes.ok) throw new Error("Failed to fetch blog_data.json");
+      const blogRes = await fetch('/database/blog_data.json');
+      if (blogRes.ok) {
         const blogData = await blogRes.json();
-        
         const allBlogs: Blog[] = Array.isArray(blogData) ? blogData : (blogData.blogs || []);
-        setTotalCount(allBlogs.length);
+        
+        const sortedBlogs = allBlogs.sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
 
+        setTotalCount(sortedBlogs.length);
         const from = (currentPage - 1) * itemsPerPage;
         const to = from + itemsPerPage;
-        setBlogs(allBlogs.slice(from, to));
-
-      } else {
-        const { data: settings } = await supabase
-          .from('landing_settings')
-          .select('blog_banner_url, title, blog_banner_title, blog_banner_description')
-          .single();
-        
-        setBannerUrl(settings?.blog_banner_url || null);
-        setBannerTitle(settings?.blog_banner_title || "My Thoughts");
-        setBannerDescription(settings?.blog_banner_description || "Sharing stories and insights.");
-        setSiteTitle(settings?.title || "Digital Soul");
-
-        const { count } = await supabase
-          .from('blogs')
-          .select('*', { count: 'exact', head: true });
-        
-        setTotalCount(count || 0);
-
-        const from = (currentPage - 1) * itemsPerPage;
-        const to = from + itemsPerPage - 1;
-
-        const { data, error } = await supabase
-          .from('blogs')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .range(from, to);
-
-        if (error) throw error;
-        if (data) setBlogs(data as Blog[]);
+        setBlogs(sortedBlogs.slice(from, to));
       }
     } catch (err) {
-      console.error("Fetch Error:", err);
-    } finally {
-      setTimeout(() => setIsLoading(false), 800);
+      console.error("Local Data Error:", err);
     }
   }, [currentPage]);
 
+  const fetchBlogs = useCallback(async () => {
+    const jsonMode = String(import.meta.env.VITE_USE_JSON_MODE).toLowerCase() === 'true';
+    
+    setIsLoading(true);
+
+    if (jsonMode || !hasSupabaseConfig) {
+      await fetchFromLocal();
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const { data: settings } = await supabase
+        .from('landing_settings')
+        .select('blog_banner_url, title, blog_banner_title, blog_banner_description')
+        .maybeSingle();
+      
+      if (settings) {
+        setBannerUrl(settings.blog_banner_url || null);
+        setBannerTitle(settings.blog_banner_title || "My Thoughts");
+        setBannerDescription(settings.blog_banner_description || "Sharing stories and insights.");
+        setSiteTitle(settings.title || "Digital Soul");
+      }
+
+      const from = (currentPage - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+
+      const [countRes, blogsRes] = await Promise.all([
+        supabase.from('blogs').select('*', { count: 'exact', head: true }),
+        supabase.from('blogs')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .range(from, to)
+      ]);
+
+      if (blogsRes.error) throw blogsRes.error;
+
+      setTotalCount(countRes.count || 0);
+      setBlogs(blogsRes.data as Blog[] || []);
+
+    } catch (err) {
+      console.warn("Supabase Fetch failed, falling back to local data.", err);
+      await fetchFromLocal();
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentPage, fetchFromLocal, hasSupabaseConfig]);
+
   useEffect(() => {
     fetchBlogs();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [fetchBlogs]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentPage]);
 
   const totalPages = Math.ceil(totalCount / itemsPerPage);
 
@@ -140,18 +163,17 @@ export default function BlogPage() {
 
       <section className="max-w-7xl mx-auto px-4 py-12 md:py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <AnimatePresence mode='wait'>
-            {blogs.map((post) => (
+          <AnimatePresence mode='popLayout' initial={false}>
+            {blogs.length > 0 ? blogs.map((post) => (
               <motion.div
                 key={post.id}
-                layout
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 whileHover={{ y: -10 }}
                 className="group bg-card border border-border rounded-[35px] overflow-hidden shadow-md hover:shadow-2xl transition-all flex flex-col h-full"
               >
-                <div className="aspect-video relative m-3 rounded-[25px] overflow-hidden bg-muted">
+                <div className="aspect-video relative m-3 rounded-[25px] rounded-b-none overflow-hidden bg-muted">
                   {post.banner_url ? (
                     <img src={post.banner_url} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={post.title} />
                   ) : (
@@ -172,25 +194,55 @@ export default function BlogPage() {
                   <h2 className="text-xl font-black mb-3 text-item-title group-hover:text-emerald-500 transition-colors leading-tight italic line-clamp-2 uppercase">
                     {post.title}
                   </h2>
-                  <div className="text-item-desc text-xs line-clamp-3 mb-8 leading-relaxed font-medium" dangerouslySetInnerHTML={{ __html: post.content }} />
-                  <Link to={`/blog/${post.id}`} className="mt-auto flex items-center justify-center gap-2 bg-muted hover:bg-emerald-500 hover:text-white py-4 rounded-2xl font-black text-[10px] tracking-[0.2em] uppercase transition-all duration-300 text-accent-custom active:scale-95">
+                  <div 
+                    className="text-item-desc text-xs line-clamp-3 mb-8 leading-relaxed font-medium" 
+                    dangerouslySetInnerHTML={{ __html: post.content ? post.content.replace(/<[^>]*>?/gm, '') : '' }} 
+                  />
+                  <Link 
+                    to={`/blog/${post.id}`} 
+                    className="mt-auto flex items-center justify-center gap-2 bg-muted hover:bg-emerald-500 hover:text-white py-4 rounded-2xl font-black text-[10px] tracking-[0.2em] uppercase transition-all duration-300 text-accent-custom active:scale-95"
+                  >
                     Read Full Article <ArrowRight size={14} />
                   </Link>
                 </div>
               </motion.div>
-            ))}
+            )) : (
+              <div className="col-span-full py-20 text-center opacity-50 italic">No blog posts found.</div>
+            )}
           </AnimatePresence>
         </div>
 
         {totalPages > 1 && (
           <div className="flex justify-center items-center gap-4 mt-20">
-            <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="p-3 rounded-xl border border-border bg-card hover:border-emerald-500 disabled:opacity-20 transition-all text-accent-custom active:scale-90"><ChevronLeft size={20} /></button>
+            <button 
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
+              disabled={currentPage === 1} 
+              className="p-3 rounded-xl border border-border bg-card hover:border-emerald-500 disabled:opacity-20 transition-all text-accent-custom active:scale-90"
+            >
+              <ChevronLeft size={20} />
+            </button>
             <div className="flex items-center gap-2">
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button key={page} onClick={() => setCurrentPage(page)} className={`w-10 h-10 rounded-xl font-black text-xs transition-all tracking-widest ${currentPage === page ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-card border border-border hover:border-emerald-500 text-accent-custom'}`}>{page}</button>
+                <button 
+                  key={page} 
+                  onClick={() => setCurrentPage(page)} 
+                  className={`w-10 h-10 rounded-xl font-black text-xs transition-all tracking-widest ${
+                    currentPage === page 
+                      ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' 
+                      : 'bg-card border border-border hover:border-emerald-500 text-accent-custom'
+                  }`}
+                >
+                  {page}
+                </button>
               ))}
             </div>
-            <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="p-3 rounded-xl border border-border bg-card hover:border-emerald-500 disabled:opacity-20 transition-all text-accent-custom active:scale-90"><ChevronRight size={20} /></button>
+            <button 
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} 
+              disabled={currentPage === totalPages} 
+              className="p-3 rounded-xl border border-border bg-card hover:border-emerald-500 disabled:opacity-20 transition-all text-accent-custom active:scale-90"
+            >
+              <ChevronRight size={20} />
+            </button>
           </div>
         )}
       </section>

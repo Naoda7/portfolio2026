@@ -33,21 +33,36 @@ export default function BlogDetail() {
 
   useEffect(() => {
     const fetchDetail = async () => {
-      const useJsonMode = import.meta.env.VITE_USE_JSON_MODE === 'true';
+      const mode = String(import.meta.env.VITE_USE_JSON_MODE || 'auto').toLowerCase();
       
-      try {
-        setIsLoading(true);
-        if (!id) return;
-
-        if (useJsonMode) {
+      const fetchFromLocal = async () => {
+        try {
           const response = await fetch('/database/blog_data.json');
           if (!response.ok) throw new Error("Failed to fetch blog_data.json");
           const jsonData = await response.json();
           const allBlogs: Blog[] = Array.isArray(jsonData) ? jsonData : (jsonData.blogs || []);
           
-          const foundPost = allBlogs.find(b => b.id === id);
+          const foundPost = allBlogs.find(b => String(b.id) === String(id));
           if (foundPost) setPost(foundPost);
-        } else {
+        } catch (err) {
+          console.error("Local JSON Detail Error:", err);
+        }
+      };
+
+      try {
+        setIsLoading(true);
+        if (!id) return;
+
+        if (mode === 'true') {
+          await fetchFromLocal();
+          return;
+        }
+
+        try {
+          const url = import.meta.env.VITE_SUPABASE_URL;
+          const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+          if (!url || !key || !url.startsWith('http')) throw new Error("Invalid Config");
+
           const { data, error } = await supabase
             .from('blogs')
             .select('*')
@@ -56,6 +71,12 @@ export default function BlogDetail() {
           
           if (error) throw error;
           if (data) setPost(data as Blog);
+
+        } catch {
+          if (mode === 'auto' || mode === 'false') {
+            console.log("%c switching", "color: #fbbf24; font-weight: bold;");
+            await fetchFromLocal();
+          }
         }
       } catch (err: unknown) {
         console.error("Error fetching detail:", err);
@@ -185,7 +206,6 @@ export default function BlogDetail() {
           background: rgba(var(--primary), 0.2);
           color: var(--primary);
         }
-        /* Extra safety for long words in titles */
         .break-words {
           word-break: break-word;
           overflow-wrap: break-word;

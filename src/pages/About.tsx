@@ -9,6 +9,7 @@ interface AboutData {
   description: string;
   contact_email: string;
   photo_url: string;
+  portfolio_url?: string;
 }
 
 export default function AboutPage() {
@@ -18,12 +19,10 @@ export default function AboutPage() {
 
   useEffect(() => {
     const fetchAboutData = async () => {
-      const useJsonMode = import.meta.env.VITE_USE_JSON_MODE === 'true';
+      const mode = String(import.meta.env.VITE_USE_JSON_MODE || 'auto').toLowerCase();
 
-      try {
-        setIsLoading(true);
-
-        if (useJsonMode) {
+      const fetchFromLocal = async () => {
+        try {
           const response = await fetch('/database/mock_data.json');
           if (!response.ok) throw new Error("Failed to fetch JSON data");
           const jsonData = await response.json();
@@ -34,7 +33,23 @@ export default function AboutPage() {
           if (jsonData.settings?.title) {
             setSiteTitle(jsonData.settings.title);
           }
-        } else {
+        } catch (err) {
+          console.error("About: Local JSON Fetch Error:", err);
+        }
+      };
+
+      try {
+        setIsLoading(true);
+
+        if (mode === 'true') {
+          await fetchFromLocal();
+          return;
+        }
+        try {
+          const url = import.meta.env.VITE_SUPABASE_URL;
+          const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+          if (!url || !key || !url.startsWith('http')) throw new Error("Invalid Config");
+
           const { data: aboutData, error: aboutError } = await supabase
             .from('about_me')
             .select('*')
@@ -49,9 +64,16 @@ export default function AboutPage() {
             .single();
           
           if (settingsData) setSiteTitle(settingsData.title);
+
+        } catch {
+
+          if (mode === 'auto' || mode === 'false') {
+            console.log("%c switching", "color: #fbbf24; font-weight: bold;");
+            await fetchFromLocal();
+          }
         }
       } catch (err) {
-        console.error("Error fetching about data:", err);
+        console.error("Critical About Error:", err);
       } finally {
         setTimeout(() => setIsLoading(false), 1000);
       }
@@ -87,7 +109,13 @@ export default function AboutPage() {
     );
   }
 
-  if (!about) return null;
+  if (!about) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <p className="text-xs uppercase tracking-widest font-black opacity-20 italic">Data Unavailable</p>
+      </div>
+    );
+  }
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -112,6 +140,7 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen bg-background text-foreground pt-32 md:pt-40 overflow-x-hidden transition-colors duration-500 relative font-sans flex flex-col">
       
+      {/* Background Orbs */}
       <div className="fixed inset-0 overflow-hidden -z-10">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-600/10 rounded-full blur-[120px]" />
         <div className="absolute bottom-[10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 rounded-full blur-[120px]" />
@@ -125,9 +154,10 @@ export default function AboutPage() {
       >
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24 items-center">
           
+          {/* Photo Section */}
           <motion.div variants={itemVariants} className="lg:col-span-5 relative group">
             <div className="relative backdrop-blur-3xl p-4 rounded-[50px] border border-white/10 bg-white/5 shadow-2xl">
-              <div className="relative z-10 w-full aspect-[4/5] rounded-[40px] overflow-hidden border border-white/10 shadow-inner">
+              <div className="relative z-10 w-full aspect-[4/5] rounded-[40px] overflow-hidden border border-white/10 shadow-inner bg-card">
                 {about.photo_url ? (
                   <motion.img 
                     whileHover={{ scale: 1.05 }}
@@ -150,11 +180,12 @@ export default function AboutPage() {
                 className="absolute -bottom-4 -right-4 z-20 bg-card border border-border px-6 py-4 rounded-2xl shadow-xl flex items-center gap-3"
               >
                 <Sparkles size={16} className="text-purple-500 animate-pulse" />
-                <span className="text-[10px] font-black uppercase tracking-widest italic">Designer & Developer</span>
+                <span className="text-[10px] font-black uppercase tracking-widest italic text-foreground">Designer & Developer</span>
               </motion.div>
             </div>
           </motion.div>
 
+          {/* Text Section */}
           <div className="lg:col-span-7">
             <motion.div variants={itemVariants} className="flex items-center gap-3 mb-6">
               <span className="h-[2px] w-10 bg-gradient-to-r from-purple-500 to-transparent" />
@@ -163,7 +194,7 @@ export default function AboutPage() {
 
             <motion.h1 
               variants={itemVariants}
-              className="text-4xl md:text-8xl font-black mb-10 tracking-tighter italic uppercase leading-[0.9]"
+              className="text-4xl md:text-6xl font-black mb-10 tracking-tighter italic uppercase leading-[0.9]"
             >
               <span className="bg-gradient-to-r from-purple-500 via-fuchsia-500 to-blue-500 bg-clip-text text-transparent inline-block">
                 {about.full_name}
@@ -171,7 +202,7 @@ export default function AboutPage() {
             </motion.h1>
 
             <motion.div variants={itemVariants} className="mb-12 relative">
-              <p className="text-muted-foreground text-lg md:text-2xl leading-relaxed whitespace-pre-line font-medium italic">
+              <p className="text-item-desc text-lg md:text-xl leading-relaxed whitespace-pre-line font-medium italic">
                 {about.description}
               </p>
             </motion.div>
@@ -189,19 +220,22 @@ export default function AboutPage() {
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[9px] text-purple-400 uppercase font-black tracking-widest">Get In Touch</span>
-                    <span className="text-sm font-bold tracking-tight">{about.contact_email}</span>
+                    <span className="text-sm font-bold tracking-tight text-foreground">{about.contact_email}</span>
                   </div>
                 </motion.a>
               )}
 
-              <motion.div 
+              <motion.a 
+                href={about.portfolio_url || "#"}
+                target="_blank"
+                rel="noopener noreferrer"
                 whileHover={{ x: 5 }}
-                className="flex items-center gap-2 text-muted-foreground hover:text-white cursor-pointer transition-all group"
+                className="flex items-center gap-2 text-muted-foreground hover:text-foreground cursor-pointer transition-all group"
               >
                 <Globe size={18} className="group-hover:text-blue-400 transition-colors" />
                 <span className="text-[10px] font-black uppercase tracking-[0.2em]">View Portfolio</span>
                 <ArrowUpRight size={14} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform text-purple-500" />
-              </motion.div>
+              </motion.a>
             </motion.div>
           </div>
         </section>

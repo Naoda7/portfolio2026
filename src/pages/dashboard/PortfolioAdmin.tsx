@@ -45,16 +45,13 @@ export default function PortfolioAdmin() {
   const [showCategoryRecs, setShowCategoryRecs] = useState(false);
   const [showTagRecs, setShowTagRecs] = useState(false);
 
-  // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
-  // Banner State
   const [bannerUrl, setBannerUrl] = useState('');
   const [bannerTitle, setBannerTitle] = useState('');
   const [bannerDescription, setBannerDescription] = useState('');
 
-  // Form State
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -94,9 +91,10 @@ export default function PortfolioAdmin() {
   }, [items, category, tags]);
 
   const handleTagSelect = (selectedTag: string) => {
-    const tagList = tags.split(',').map(t => t.trim()).filter(t => t !== "");
+    const tagList = tags.split(',').map(t => t.trim());
     tagList[tagList.length - 1] = selectedTag;
-    setTags(tagList.join(', ') + ', ');
+    const updatedTags = tagList.filter(t => t !== "").join(', ');
+    setTags(updatedTags + ', ');
     setShowTagRecs(false);
   };
 
@@ -288,7 +286,6 @@ export default function PortfolioAdmin() {
 
   return (
     <div className="space-y-6 pb-24 md:pb-10 animate-in fade-in duration-500">
-      {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Portfolio Management</h1>
@@ -311,7 +308,6 @@ export default function PortfolioAdmin() {
         </div>
       </div>
 
-      {/* Search Bar */}
       <div className="relative w-full max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
         <Input 
@@ -322,7 +318,6 @@ export default function PortfolioAdmin() {
         />
       </div>
 
-      {/* Project Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
         {loading && !isModalOpen && !isBannerModalOpen ? (
           <div className="col-span-full flex justify-center py-20"><Loader2 className="animate-spin text-primary" size={40} /></div>
@@ -363,7 +358,6 @@ export default function PortfolioAdmin() {
         )}
       </div>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex flex-wrap items-center justify-center gap-2 pt-6">
           <Button variant="outline" size="icon" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="rounded-xl h-10 w-10">
@@ -391,16 +385,9 @@ export default function PortfolioAdmin() {
         </div>
       )}
 
-      {/* Banner Modal */}
       {isBannerModalOpen && (
-        <div 
-          className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200"
-          onClick={() => setIsBannerModalOpen(false)}
-        >
-          <div 
-            className="w-full max-w-2xl relative"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-2xl relative">
             <AdminBannerEditor 
               sectionTitle="Portfolio Page Banner"
               bannerUrl={bannerUrl}
@@ -433,16 +420,9 @@ export default function PortfolioAdmin() {
         </div>
       )}
 
-      {/* Project Form Modal */}
       {isModalOpen && (
-        <div 
-          className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200"
-          onClick={closeModal}
-        >
-          <div 
-            className="bg-card border border-border w-full max-w-2xl rounded-[2rem] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-card border border-border w-full max-w-2xl rounded-[2rem] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
             <div className="p-6 border-b border-border flex justify-between items-center">
               <h2 className="text-xl font-bold">{currentId ? 'Edit Project' : 'New Project'}</h2>
               <button onClick={closeModal} className="p-2 hover:bg-muted rounded-full transition-colors"><X size={20} /></button>
