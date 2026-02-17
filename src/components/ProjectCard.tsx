@@ -14,20 +14,15 @@ export default function ProjectCard({ item }: ProjectCardProps) {
   const [zoom, setZoom] = useState(1);
 
   useEffect(() => {
-    if (isModalOpen || isPreviewOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
+    const isLocked = isModalOpen || isPreviewOpen;
+    document.body.style.overflow = isLocked ? 'hidden' : 'unset';
+    return () => { document.body.style.overflow = 'unset'; };
   }, [isModalOpen, isPreviewOpen]);
 
-  const handleResetZoom = () => {
-    setZoom(1);
-  };
+  const handleResetZoom = () => setZoom(1);
 
   return (
     <>
-      {/* --- MAIN CARD --- */}
       <motion.div
         layout
         initial={{ opacity: 0, scale: 0.9 }}
@@ -35,9 +30,9 @@ export default function ProjectCard({ item }: ProjectCardProps) {
         exit={{ opacity: 0, scale: 0.9 }}
         whileHover={{ y: -10 }}
         onClick={() => setIsModalOpen(true)}
-        className="group bg-card border border-border rounded-[35px] overflow-hidden cursor-pointer shadow-[#bab3e636]  shadow-lg hover:shadow-2xl hover:shadow-[#bab3e636] transition-all h-full flex flex-col"
+        className="group bg-card border border-border rounded-[35px] overflow-hidden cursor-pointer shadow-[#bab3e636] shadow-lg hover:shadow-2xl hover:shadow-[#bab3e636] transition-all h-full flex flex-col"
       >
-        <div className="aspect-[4/3] relative m-3 rounded-[25px] rounded-b-none overflow-hidden bg-muted">
+        <div className="aspect-[4/3] relative m-3 rounded-[25px] rounded-b-none overflow-hidden bg-muted shrink-0">
           <img 
             src={item.image_url} 
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
@@ -54,10 +49,10 @@ export default function ProjectCard({ item }: ProjectCardProps) {
           <span className="text-[10px] font-black text-primary uppercase tracking-widest">
             #{item.category}
           </span>
-          <h3 className="text-xl font-black italic uppercase text-item-title mt-1 leading-tight group-hover:text-primary transition-colors">
+          <h3 className="text-xl font-black italic uppercase text-item-title mt-1 leading-tight group-hover:text-primary transition-colors line-clamp-1">
             {item.title}
           </h3>
-          <p className="text-item-desc text-sm line-clamp-2 mt-2 font-medium mb-4">
+          <p className="text-item-desc text-sm line-clamp-2 mt-2 font-medium mb-4 min-h-[2.5rem]">
             {item.description}
           </p>
           <div className="mt-auto flex flex-wrap gap-2">
@@ -70,25 +65,34 @@ export default function ProjectCard({ item }: ProjectCardProps) {
         </div>
       </motion.div>
 
-      {/* --- PORTALS --- */}
       {createPortal(
-        <AnimatePresence>
-          {/* PROJECT DETAIL MODAL */}
+        <AnimatePresence mode="wait">
           {isModalOpen && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => setIsModalOpen(false)}>
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/90 backdrop-blur-md" />
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                exit={{ opacity: 0 }} 
+                className="absolute inset-0 bg-black/90 backdrop-blur-md"
+                onClick={() => setIsModalOpen(false)}
+              />
               <motion.div 
                 initial={{ scale: 0.9, opacity: 0 }} 
                 animate={{ scale: 1, opacity: 1 }} 
                 exit={{ scale: 0.9, opacity: 0 }} 
-                onClick={e => e.stopPropagation()} 
                 className="bg-card border border-border w-full max-w-5xl h-auto md:h-[600px] rounded-[40px] overflow-hidden relative z-10 flex flex-col md:flex-row shadow-2xl"
               >
-                <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 p-2 bg-muted/50 hover:bg-primary hover:text-white rounded-full z-50 transition-all">
+                <button 
+                  onClick={() => setIsModalOpen(false)} 
+                  className="absolute top-6 right-6 p-2 bg-muted/50 hover:bg-primary hover:text-white rounded-full z-50 transition-all"
+                >
                   <X size={20}/>
                 </button>
                 
-                <div className="md:w-3/5 bg-black/20 flex items-center justify-center p-4 cursor-zoom-in group" onClick={() => { setIsPreviewOpen(true); setIsModalOpen(false); }}>
+                <div 
+                  className="md:w-3/5 bg-black/20 flex items-center justify-center p-4 cursor-zoom-in group" 
+                  onClick={() => { setIsPreviewOpen(true); setIsModalOpen(false); }}
+                >
                   <img src={item.image_url} className="w-full h-auto object-contain rounded-2xl shadow-inner group-hover:scale-[1.02] transition-transform duration-500" alt="Detail" />
                 </div>
 
@@ -108,14 +112,18 @@ export default function ProjectCard({ item }: ProjectCardProps) {
             </div>
           )}
 
-          {/* IMAGE PREVIEW */}
           {isPreviewOpen && (
             <div className="fixed inset-0 z-[120] bg-black/95 flex items-center justify-center overflow-hidden touch-none">
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 cursor-grab active:cursor-grabbing" onClick={() => {setIsPreviewOpen(false); handleResetZoom();}} />
+              <div 
+                className="absolute inset-0 z-0 cursor-default" 
+                onClick={() => {setIsPreviewOpen(false); handleResetZoom();}} 
+              />
               
-              {/* Dark Mode Reactive Controls */}
               <div className="absolute top-10 right-10 z-[140]">
-                 <button onClick={() => {setIsPreviewOpen(false); handleResetZoom();}} className="p-4 bg-card border border-border text-foreground rounded-full hover:bg-red-500 hover:text-white transition-all shadow-2xl">
+                 <button 
+                  onClick={() => {setIsPreviewOpen(false); handleResetZoom();}} 
+                  className="p-4 bg-card/80 backdrop-blur-md border border-border text-foreground rounded-full hover:bg-red-500 hover:text-white transition-all shadow-2xl"
+                 >
                     <X size={24}/>
                  </button>
               </div>
@@ -134,12 +142,11 @@ export default function ProjectCard({ item }: ProjectCardProps) {
                 </div>
               </div>
 
-              {/* Draggable Image */}
               <motion.div
                 drag
                 dragConstraints={{ left: -500, right: 500, top: -500, bottom: 500 }}
                 dragElastic={0.2}
-                className="relative z-[125] cursor-grab active:cursor-grabbing"
+                className="relative z-10 cursor-grab active:cursor-grabbing"
               >
                 <motion.img 
                   animate={{ scale: zoom }} 

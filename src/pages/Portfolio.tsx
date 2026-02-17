@@ -21,34 +21,35 @@ export default function PortfolioPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
-  // Fungsi Helper untuk mengacak array (Shuffle)
-  const shuffleArray = (array: Portfolio[]) => {
+  const shuffleArray = useCallback((array: Portfolio[]) => {
     return [...array].sort(() => Math.random() - 0.5);
-  };
+  }, []);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (signal?: AbortSignal) => {
     const useJsonMode = import.meta.env.VITE_USE_JSON_MODE === 'true';
     
-    // Logika Fetch Local (JSON Fallback)
     const fetchFromLocal = async () => {
-      const customRes = await fetch('/database/custom.json');
-      if (customRes.ok) {
-        const customData = await customRes.json();
-        const pfSettings = customData.portfolio;
-        setBannerUrl(pfSettings?.banner_url || null);
-        setBannerTitle(pfSettings?.banner_title || "Selected Works");
-        setBannerDescription(pfSettings?.banner_description || "Exploring creative boundaries.");
-        setSiteTitle(pfSettings?.title || "Digital Soul");
-      }
+      try {
+        const customRes = await fetch('/database/custom.json', { signal });
+        if (customRes.ok) {
+          const customData = await customRes.json();
+          const pfSettings = customData.portfolio;
+          setBannerUrl(pfSettings?.banner_url || null);
+          setBannerTitle(pfSettings?.banner_title || "Selected Works");
+          setBannerDescription(pfSettings?.banner_description || "Exploring creative boundaries.");
+          setSiteTitle(pfSettings?.title || "Digital Soul");
+        }
 
-      const response = await fetch('/database/mock_data.json');
-      if (response.ok) {
-        const jsonData = await response.json();
-        const rawData = jsonData.portfolios || [];
-        const sortedData = rawData.sort((a: Portfolio, b: Portfolio) => 
-          b.id.localeCompare(a.id, undefined, { numeric: true, sensitivity: 'base' })
-        );
-        return sortedData;
+        const response = await fetch('/database/mock_data.json', { signal });
+        if (response.ok) {
+          const jsonData = await response.json();
+          const rawData = jsonData.portfolios || [];
+          return rawData.sort((a: Portfolio, b: Portfolio) => 
+            b.id.localeCompare(a.id, undefined, { numeric: true, sensitivity: 'base' })
+          );
+        }
+      } catch {
+        // Error handling diam tanpa console log
       }
       return [];
     };
@@ -71,7 +72,6 @@ export default function PortfolioPage() {
           if (error) throw error;
           portfolioData = data as Portfolio[];
         } catch {
-          console.log("%c switching", "color: #fbbf24; font-weight: bold;");
           portfolioData = await fetchFromLocal();
         }
       }
@@ -81,18 +81,19 @@ export default function PortfolioPage() {
         setRandomAllItems(shuffleArray(portfolioData));
         setCategories(['All', ...Array.from(new Set(portfolioData.map((item) => item.category)))]);
       }
-    } catch (err) {
-      console.error("Fetch Error:", err);
+    } catch {
+      // Error handling diam tanpa console log
     } finally {
       setTimeout(() => setIsLoading(false), 800);
     }
-  }, []);
+  }, [shuffleArray]);
 
   useEffect(() => { 
-    fetchData(); 
+    const controller = new AbortController();
+    fetchData(controller.signal); 
+    return () => controller.abort();
   }, [fetchData]);
 
-  // Efek Interval Shuffle: Mengacak tab "All" setiap 10 detik
   useEffect(() => {
     if (portfolios.length > 0 && activeTab === 'All') {
       const interval = setInterval(() => {
@@ -100,12 +101,10 @@ export default function PortfolioPage() {
       }, 10000);
       return () => clearInterval(interval);
     }
-  }, [portfolios, activeTab]);
+  }, [portfolios, activeTab, shuffleArray]);
 
   const filteredData = useMemo(() => {
-    if (activeTab === 'All') {
-      return randomAllItems;
-    }
+    if (activeTab === 'All') return randomAllItems;
     return portfolios.filter(i => i.category === activeTab);
   }, [activeTab, portfolios, randomAllItems]);
   
@@ -118,7 +117,7 @@ export default function PortfolioPage() {
 
   if (isLoading) {
     return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-background text-primary gap-4 font-sans">
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-background text-primary gap-4 font-sans antialiased">
         <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
           <Loader2 size={48} />
         </motion.div>
@@ -128,9 +127,8 @@ export default function PortfolioPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans transition-colors duration-500 overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground font-sans antialiased transition-colors duration-500 overflow-x-hidden">
       
-      {/* --- BANNER SECTION --- */}
       <section className="pt-28 md:pt-36 px-4 max-w-7xl mx-auto">
         <motion.div 
           initial={{ opacity: 0, y: -20 }} 
@@ -153,7 +151,6 @@ export default function PortfolioPage() {
         </motion.div>
       </section>
 
-      {/* --- FILTER TABS --- */}
       <div className="flex flex-wrap justify-center gap-2 mt-10 px-6">
         {categories.map(cat => (
           <button 
@@ -170,8 +167,7 @@ export default function PortfolioPage() {
         ))}
       </div>
 
-      {/* --- PORTFOLIO GRID --- */}
-      <div className="max-w-7xl mx-auto px-4 mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 min-h-[600px]">
+      <div className="max-w-7xl mx-auto px-4 mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 min-h-[600px] items-stretch content-start">
         <AnimatePresence mode="popLayout" initial={false}>
           {currentData.map((item) => (
             <motion.div
@@ -180,10 +176,8 @@ export default function PortfolioPage() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ 
-                duration: 0.4, 
-                ease: [0.4, 0, 0.2, 1] 
-              }}
+              transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+              className="h-full flex flex-col"
             >
               <ProjectCard item={item} />
             </motion.div>
@@ -191,7 +185,6 @@ export default function PortfolioPage() {
         </AnimatePresence>
       </div>
 
-      {/* --- PAGINATION --- */}
       {totalPages > 1 && (
         <div className="flex justify-center items-center gap-4 mt-16 mb-16">
           <button 
